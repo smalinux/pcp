@@ -1,0 +1,42 @@
+[
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-I../../src/include",
+            "-I../../src/include/pcp",
+            "-DPCP_VERSION=\"5.3.0\"",
+            "-fPIC",
+            "-fno-strict-aliasing",
+            "-D_GNU_SOURCE",
+            "-Wall",
+            "-O2",
+            "-g",
+            "-o",
+            "sha1.o",
+            "sha1.c"
+        ],
+        "directory": "/home/smalinux/pcplab/src/mypminfo",
+        "file": "sha1.c"
+    },
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-I../../src/include",
+            "-I../../src/include/pcp",
+            "-DPCP_VERSION=\"5.3.0\"",
+            "-fPIC",
+            "-fno-strict-aliasing",
+            "-D_GNU_SOURCE",
+            "-Wall",
+            "-O2",
+            "-g",
+            "-o",
+            "pminfo.o",
+            "pminfo.c"
+        ],
+        "directory": "/home/smalinux/pcplab/src/mypminfo",
+        "file": "pminfo.c"
+    }
+]
