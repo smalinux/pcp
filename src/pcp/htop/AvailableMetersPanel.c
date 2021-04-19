@@ -106,6 +106,7 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    Panel_setHeader(super, "Available meters");
    // Platform_meterTypes[0] should be always (&CPUMeter_class), which we will
    // handle separately in the code below.
+   // and Platform_meterTypes[1] should be always (&PCPPluginsMeter_class)
    for (int i = 1; Platform_meterTypes[i]; i++) {
       const MeterClass* type = Platform_meterTypes[i];
       assert(type != &CPUMeter_class);
@@ -125,5 +126,6 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    } else {
       Panel_add(super, (Object*) ListItem_new("CPU", 1));
    }
+   // Handle (&PCPPluginsMeter_class)
    return this;
 }

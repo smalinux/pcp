@@ -84,6 +84,7 @@ CFILES = \
 	pcp/PCPProcess.c \
 	pcp/PCPProcessList.c \
 	pcp/Platform.c \
+	pcp/Plugins.c \
 	pcp-htop.c \
 
 HFILES = \
@@ -148,6 +149,7 @@ HFILES = \
 	pcp/PCPProcess.h \
 	pcp/PCPProcessList.h \
 	pcp/Platform.h \
+	pcp/Plugins.h \
 	pcp/ProcessField.h \
 
 MAN_PAGES = $(CMDTARGET).1

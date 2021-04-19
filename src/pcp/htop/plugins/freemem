@@ -1,0 +1,5 @@
+[ZFS]
+active = true
+name = freemem
+metric = mem.freemem
+color = BASIC_COLOR

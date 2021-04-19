@@ -1,0 +1,5 @@
+[ZFS]
+active = true
+name = zfsmeter
+metric = zfs.arc.size
+color = BASIC_COLOR

@@ -44,6 +44,7 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
+#include "Plugins.h"
 
 
 typedef struct Platform_ {
@@ -76,6 +77,7 @@ const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
+   //&PCPPluginsMeter_class,
    &ClockMeter_class,
    &DateMeter_class,
    &DateTimeMeter_class,
@@ -426,6 +428,10 @@ void Platform_init(void) {
       pmflush();
       exit(1);
    }
+
+   /* compute plugin count */
+   int x = PCPPlugin_computePluginCount();
+   fprintf(stderr, "num: %d", x);
 
    pcp = xCalloc(1, sizeof(Platform));
    pcp->context = sts;
