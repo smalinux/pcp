@@ -45,6 +45,15 @@ static void PCPProcessList_updateCPUcount(PCPProcessList* this) {
    this->values = xCalloc(cpus, sizeof(pmAtomValue));
 }
 
+static void PCPProcessList_updatePlugincount(PCPProcessList* this) {
+   ProcessList* pl = &(this->super);
+   int pc;
+   // SMA: missing validation
+   pc = PCPPlugin_computePluginCount();
+   pl->pluginCount = pc;
+   fprintf(stderr, "pl->pluginCount: %d\n", pl->pluginCount);
+}
+
 static char* setUser(UsersTable* this, unsigned int uid, int pid, int offset) {
    char* name = Hashtable_get(this->users, uid);
    if (name)
@@ -703,6 +712,7 @@ static void PCPProcessList_updateHeader(ProcessList* super, const Settings* sett
 
    PCPProcessList* this = (PCPProcessList*) super;
    PCPProcessList_updateCPUcount(this);
+   PCPProcessList_updatePlugincount(this);
 
    PCPProcessList_backupCPUTime(this->cpu);
    PCPProcessList_updateAllCPUTime(this, PCP_CPU_USER, CPU_USER_TIME);

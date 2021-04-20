@@ -46,6 +46,9 @@ in the source distribution for its full text.
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "Plugins.h"
 
+typedef struct PCPPlugin_meter_ {
+
+} PCPPlugin_meter;
 
 typedef struct Platform_ {
    int context;			/* PMAPI(3) context identifier */
@@ -61,6 +64,8 @@ typedef struct Platform_ {
    char* release;		/* uname and distro from this context */
    int pidmax;			/* maximum platform process identifier */
    int ncpu;			/* maximum processor count configured */
+   int PCPPlugin_count;
+   PCPPlugin_meter* PCPPlugin_meter;
 } Platform;
 
 Platform* pcp;
@@ -429,9 +434,6 @@ void Platform_init(void) {
       exit(1);
    }
 
-   /* compute plugin count */
-   int x = PCPPlugin_computePluginCount();
-   fprintf(stderr, "num: %d", x);
 
    pcp = xCalloc(1, sizeof(Platform));
    pcp->context = sts;
@@ -439,6 +441,12 @@ void Platform_init(void) {
    pcp->pmids = xCalloc(PCP_METRIC_COUNT, sizeof(pmID));
    pcp->names = xCalloc(PCP_METRIC_COUNT, sizeof(char*));
    pcp->descs = xCalloc(PCP_METRIC_COUNT, sizeof(pmDesc));
+
+   /* SMA: start */
+   /* compute plugin count */
+   pcp->PCPPlugin_count = PCPPlugin_computePluginCount();
+   fprintf(stderr, "num: %d\n", pcp->PCPPlugin_count);
+   /* SMA: end */
 
    if (opts.context == PM_CONTEXT_ARCHIVE) {
       gettimeofday(&pcp->offset, NULL);
@@ -878,3 +886,63 @@ void Platform_gettime_monotonic(uint64_t* msec) {
    struct timeval* tv = &pcp->result->timestamp;
    *msec = ((uint64_t)tv->tv_sec * 1000) + ((uint64_t)tv->tv_usec / 1000);
 }
+
+/* SMA:
+ * - this func should be static
+ * - i think this func should be in pcp/Platform.c
+ * - /etc/pcp/htop/
+ * - enter every single file && search if file contain more than "unit" - and
+ *   increase the counter if "active" == 1
+ * -
+ * -
+ */
+int PCPPlugin_computePluginCount(void) {
+
+    DIR* FD = opendir("./plugins/");
+    struct dirent* in_file;
+    //char    buffer[BUFSIZ];
+    int     count = 0;
+
+
+    /* Scanning the in directory */
+    if (NULL == FD)
+    {
+        fprintf(stderr, "Error : Failed to open input directory - %s\n", strerror(errno));
+
+        return 1;
+    }
+    while ( (in_file = readdir(FD)) != NULL)
+    {
+        /* On linux/Unix we don't want current and parent directories
+         * On windows machine too, thanks Greg Hewgill
+         */
+        if (!strcmp (in_file->d_name, "."))
+            continue;
+        if (!strcmp (in_file->d_name, ".."))
+            continue;
+
+        // SMA: debug
+
+        fprintf(stderr, "%s\n", in_file->d_name);
+        count++;
+
+        /* Open directory entry file for common operation */
+        /* TODO : change permissions to meet your need! */
+        //entry_file = fopen(in_file->d_name, "r");
+
+        /* Doing some struf with entry_file : */
+        /* For example use fgets */
+        /*while (fgets(buffer, BUFSIZ, entry_file) != NULL)
+        {
+        } */
+
+        /* When you finish with the file, close it */
+        /*fclose(entry_file);*/
+
+    }
+
+    /* Don't forget to close common file before leaving */
+
+    return count;
+}
+

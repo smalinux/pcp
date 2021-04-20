@@ -87,6 +87,8 @@ void Platform_getHostname(char* buffer, size_t size);
 
 void Platform_getRelease(char** string);
 
+int PCPPlugin_computePluginCount(void);
+
 enum {
    PLATFORM_LONGOPT_HOST = 128,
    PLATFORM_LONGOPT_TIMEZONE,

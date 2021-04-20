@@ -80,6 +80,7 @@ typedef struct ProcessList_ {
    memory_t cachedSwap;
 
    unsigned int cpuCount;
+   unsigned int pluginCount;
 } ProcessList;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);

@@ -3,3 +3,4 @@ active = true
 name = sysname
 metric = kernel.uname.sysname
 color = BASIC_COLOR
+uiName = Sysname

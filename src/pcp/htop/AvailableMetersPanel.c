@@ -126,6 +126,16 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    } else {
       Panel_add(super, (Object*) ListItem_new("CPU", 1));
    }
+
    // Handle (&PCPPluginsMeter_class)
+   //const MeterClass* type = &CPUMeter_class;
+   unsigned int plugins = pl->pluginCount;
+   if (plugins > 1) {
+      for (unsigned int i = 1; i <= plugins; i++) {
+         char buffer[50];
+         xSnprintf(buffer, sizeof(buffer), "%s %d", "PlgPlace", i);
+         Panel_add(super, (Object*) ListItem_new(buffer, i));
+      }
+   }
    return this;
 }
