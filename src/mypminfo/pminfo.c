@@ -78,56 +78,17 @@ static int	p_value;	/* pmFetch and print value(s)? */
 static int	p_force;	/* pmFetch and print value(s)? for non-enumerable indoms */
 
 static int	need_context;	/* set if need a pmapi context */
-static int	need_labels;	/* set if need to lookup labels */
 static int	need_pmid;	/* set if need to lookup names */
 static char	**namelist;
 static pmID	*pmidlist;
 static int	contextid;
 static int	batchsize = 128;
 static int	batchidx;
-static int	verify;		/* Only print error messages */
-static int	events;		/* Decode event metrics */
+static int	verify;		/* Only print error messages */ // SMA: delete me
 static pmID	pmid_flags;
 static pmID	pmid_missed;
-
-/*
- * InDom cache (icache) state - multiple accessors, so no longer using
- * local variables like most other caching in pminfo.  Caches recently
- * requested instance names and labels for a given pmInDom, since they
- * are closely related - labels/series reporting needs instance names.
- */
-static pmInDom		icache_nameindom = PM_INDOM_NULL;
-static int		icache_numinst = -1;
-static int		*icache_instlist;
-static char		**icache_namelist;
-
 char** mymetrics;
 static int totalmetrics = 0; // FIXME get this value from parser
-
-static void
-icache_update_name(pmInDom indom)
-{
-    if (indom == icache_nameindom)
-	return;
-    if (icache_numinst > 0) {
-	free(icache_instlist);
-	free(icache_namelist);
-    }
-    icache_numinst = pmGetInDom(indom, &icache_instlist, &icache_namelist);
-    icache_nameindom = indom;
-}
-
-static char *
-lookup_instance_name(pmInDom indom, int inst)
-{
-    int			i;
-
-    icache_update_name(indom);
-    for (i = 0; i < icache_numinst; i++)
-	if (icache_instlist[i] == inst)
-	    return icache_namelist[i];
-    return NULL;
-}
 
 /*
  * we only ever have one metric
@@ -138,8 +99,10 @@ mydump(pmDesc *dp, pmValueSet *vsp, char *indent)
     int		j;
     char	*p;
 
+    // SMA: START: useless
     if (indent != NULL)
 	printf("%s", indent);
+    // SMA: END: useless
     if (vsp->numval == 0) {
 	printf("No value(s) available!\n");
 	return;
@@ -149,173 +112,11 @@ mydump(pmDesc *dp, pmValueSet *vsp, char *indent)
 	return;
     }
 
-    for (j = 0; j < vsp->numval; j++) {
+
 	pmValue	*vp = &vsp->vlist[j];
-	if (dp->indom != PM_INDOM_NULL) {
-	    if ((p = lookup_instance_name(dp->indom, vp->inst)) == NULL) {
-		if (p_force) {
-		    /* the instance disappeared; ignore it */
-		    printf("    inst [%d \"%s\"]\n", vp->inst, "DISAPPEARED");
-		    continue;
-		}
-		else {
-		    /* report the error and give up */
-		    printf("pmNameIndom: indom=%s inst=%d: %s\n",
-			    pmInDomStr(dp->indom), vp->inst, pmErrStr(PM_ERR_INST));
-		    printf("    inst [%d]", vp->inst);
-		}
-	    }
-	    else
-		printf("    inst [%d or \"%s\"]", vp->inst, p);
-	}
-	else
+
 	pmPrintValue(stdout, vsp->valfmt, dp->type, vp, 1);
-	if (!events)
-	    continue;
-	if (dp->type == PM_TYPE_HIGHRES_EVENT)
-	    myeventdump(vsp, j, 1);
-	else if (dp->type == PM_TYPE_EVENT)
-	    myeventdump(vsp, j, 0);
-    }
-}
 
-static void
-setup_event_derived_metrics(void)
-{
-    if (pmid_flags == 0) {
-	/*
-	 * get PMID for event.flags and event.missed
-	 * note that pmUnpackEventRecords() will have called
-	 * __pmRegisterAnon(), so the anonymous metrics
-	 * should now be in the PMNS
-	 */
-	const char	*name_flags = "event.flags";
-	const char	*name_missed = "event.missed";
-	int		sts;
-
-	sts = pmLookupName(1, &name_flags, &pmid_flags);
-	if (sts < 0) {
-	    /* should not happen! */
-	    fprintf(stderr, "Warning: cannot get PMID for %s: %s\n",
-			name_flags, pmErrStr(sts));
-	    /* avoid subsequent warnings ... */
-	    pmid_flags = pmID_build(pmID_domain(pmid_flags), pmID_cluster(pmid_flags), 1);
-	}
-	sts = pmLookupName(1, &name_missed, &pmid_missed);
-	if (sts < 0) {
-	    /* should not happen! */
-	    fprintf(stderr, "Warning: cannot get PMID for %s: %s\n",
-			name_missed, pmErrStr(sts));
-	    /* avoid subsequent warnings ... */
-	    pmid_missed = pmID_build(pmID_domain(pmid_missed), pmID_cluster(pmid_missed), 1);
-	}
-    }
-}
-
-static int
-dump_nparams(int numpmid)
-{
-    if (numpmid == 0) {
-	printf(" ---\n");
-	printf("	No parameters\n");
-	return -1;
-    }
-    if (numpmid < 0) {
-	printf(" ---\n");
-	printf("	Error: illegal number of parameters (%d)\n", numpmid);
-	return -1;
-    }
-    return 0;
-}
-
-static void
-dump_parameter(pmValueSet *xvsp, int index, int *flagsp)
-{
-    int		sts, flags = *flagsp;
-    pmDesc	desc;
-    char	**names;
-
-    if ((sts = pmNameAll(xvsp->pmid, &names)) >= 0) {
-	if (index == 0) {
-	    if (xvsp->pmid == pmid_flags) {
-		flags = *flagsp = xvsp->vlist[0].value.lval;
-		printf(" flags 0x%x", flags);
-		printf(" (%s) ---\n", pmEventFlagsStr(flags));
-		free(names);
-		return;
-	    }
-	    else
-		printf(" ---\n");
-	}
-	if ((flags & PM_EVENT_FLAG_MISSED) &&
-	    (index == 1) &&
-	    (xvsp->pmid == pmid_missed)) {
-	    printf("        ==> %d missed event records\n",
-			xvsp->vlist[0].value.lval);
-	    free(names);
-	    return;
-	}
-	printf("    ");
-	__pmPrintMetricNames(stdout, sts, names, " or ");
-	printf(" (%s)\n", pmIDStr(xvsp->pmid));
-	free(names);
-    }
-    else
-	printf("	PMID: %s\n", pmIDStr(xvsp->pmid));
-    if ((sts = pmLookupDesc(xvsp->pmid, &desc)) < 0)
-	printf("	pmLookupDesc: %s\n", pmErrStr(sts));
-    else
-	mydump(&desc, xvsp, "    ");
-}
-
-static void
-myeventdump(pmValueSet *vsp, int inst, int highres)
-{
-    int		r;		/* event records */
-    int		p;		/* event parameters */
-    int		nrecords;
-    int		flags;
-
-    if (highres) {
-	pmHighResResult	**hr;
-
-	if ((nrecords = pmUnpackHighResEventRecords(vsp, inst, &hr)) < 0) {
-	    fprintf(stderr, "%s: pmUnpackHighResEventRecords: %s\n",
-		    pmGetProgname(), pmErrStr(nrecords));
-	    return;
-	}
-	setup_event_derived_metrics();
-	for (r = 0; r < nrecords; r++) {
-	    printf("    --- event record [%d] timestamp ", r);
-	    pmPrintHighResStamp(stdout, &hr[r]->timestamp);
-	    if (dump_nparams(hr[r]->numpmid) < 0)
-		continue;
-	    flags = 0;
-	    for (p = 0; p < hr[r]->numpmid; p++)
-		dump_parameter(hr[r]->vset[p], p, &flags);
-	}
-	pmFreeHighResEventResult(hr);
-    }
-    else {
-	pmResult	**res;
-
-	if ((nrecords = pmUnpackEventRecords(vsp, inst, &res)) < 0) {
-	    fprintf(stderr, "%s: pmUnpackEventRecords: %s\n",
-			pmGetProgname(), pmErrStr(nrecords));
-	    return;
-	}
-	setup_event_derived_metrics();
-	for (r = 0; r < nrecords; r++) {
-	    printf("    --- event record [%d] timestamp ", r);
-	    pmPrintStamp(stdout, &res[r]->timestamp);
-	    if (dump_nparams(res[r]->numpmid) < 0)
-		continue;
-	    flags = 0;
-	    for (p = 0; p < res[r]->numpmid; p++)
-		dump_parameter(res[r]->vset[p], p, &flags);
-	}
-	pmFreeEventResult(res);
-    }
 }
 
 static void
@@ -331,8 +132,9 @@ report(void)
     int		*all_inst;
     char	**all_names;
 
+    // SMA: START: useless
     if (batchidx == 0)
-	return;
+    // SMA: END: useless
 
     /* Lookup names.
      * Cull out names that were unsuccessfully looked up.
@@ -389,6 +191,7 @@ report(void)
 
 
 	if (p_value || verify) {
+      printf("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
 	    vsp = result->vset[i];
 	    if (p_force) {
 		if (result->vset[i]->numval == PM_ERR_PROFILE) {
@@ -440,7 +243,7 @@ report(void)
 	}
 
 	/* not verify mode - detailed reporting */
-	printf("%s: ", namelist[i]);
+	printf("%s:> ", namelist[i]);
 	if (p_value)
 	    mydump(&desc, vsp, NULL);
     }
@@ -612,15 +415,18 @@ main(int argc, char **argv)
    need_context = 1;
    need_pmid = 1;
 
+   // START: useless validation
     if (opts.errors || (opts.flags & PM_OPTFLAG_EXIT)) {
-	exitsts = !(opts.flags & PM_OPTFLAG_EXIT);
-	pmUsageMessage(&opts);
-	exit(exitsts);
+      exitsts = !(opts.flags & PM_OPTFLAG_EXIT);
+      pmUsageMessage(&opts);
+      exit(exitsts);
     }
+   // END: useless validation
 
     if (opts.context)
 	need_context = 1;
 
+    // START: useless
     if (opts.context == PM_CONTEXT_ARCHIVE)
 	/*
 	 * for archives, one metric per batch and start at beginning of
@@ -628,9 +434,11 @@ main(int argc, char **argv)
 	 * the archive
 	 */
 	batchsize = 1;
+    // END: useless
 
-    if (verify)
+    if (verify)      // SMA: verify == 0
       p_value = 0;
+    //printf("####### verify: %d\n", verify);
 
 
     if ((namelist = (char **)malloc(batchsize * sizeof(char *))) == NULL) {
@@ -643,10 +451,15 @@ main(int argc, char **argv)
 	exit(1);
     }
 
-    if (!opts.nsflag)
+    // START: useless
+    if (!opts.nsflag) // SMA:    !opts.nsflag == 1
 	need_context = 1; /* for distributed PMNS as no PMNS file given */
+    //printf("####### nsflag: %d\n", !opts.nsflag);
+    // END: useless
 
+    // SMA: Okay,, but ...
     if (need_context) {
+      printf("*****************************************\n");
 	if (opts.context == PM_CONTEXT_ARCHIVE)
 	    source = opts.archives[0];
 	else if (opts.context == PM_CONTEXT_HOST)
@@ -671,7 +484,9 @@ main(int argc, char **argv)
 	}
 	contextid = sts;
 
+   // SMA: useless
 	if (opts.context == PM_CONTEXT_ARCHIVE) {
+      printf("*****************************************\n");
 	    if (opts.nsflag) {
 		/*
 		 * loaded -n (or -N) namespace from the command line,
@@ -687,18 +502,21 @@ main(int argc, char **argv)
 	}
     }
 
-    if (opts.optind >= argc) {
+
+    if (opts.optind >= argc) { // SMA: useless. i will use argc ..
        printf("\npmTraversePMNS\n"); // just $pminfo | head
+      printf("77777777777777777777777777777777777777777777777777\n");
     	sts = pmTraversePMNS("", dometric);
 	if (sts < 0) {
 	    fprintf(stderr, "Error: %s\n", pmErrStr(sts));
 		exitsts = 1;
 	}
     }
-    else {
+    else { // SMA: <3
       for (a = opts.optind; a < totalmetrics; a++) { // FIXME: get num of metrics dynamically
          printf("argv[%d] = %s\n", a, mymetrics[a]);
          sts = pmTraversePMNS(mymetrics[a], dometric);
+         // SMA: validation
          if (sts < 0) {
             fprintf(stderr, "Error: %s: %s\n", argv[a], pmErrStr(sts));
             exitsts = 1;
