@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "UsersTable.h"
 #include "Vector.h"
+#include "zfs/ZfsArcStats.h"
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>

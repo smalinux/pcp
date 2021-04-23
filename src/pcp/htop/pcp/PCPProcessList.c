@@ -51,7 +51,7 @@ static void PCPProcessList_updatePlugincount(PCPProcessList* this) {
    // SMA: missing validation
    pc = PCPPlugin_computePluginCount();
    pl->pluginCount = pc;
-   fprintf(stderr, "pl->pluginCount: %d\n", pl->pluginCount);
+   //fprintf(stderr, "pl->pluginCount: %d\n", pl->pluginCount);
 }
 
 static char* setUser(UsersTable* this, unsigned int uid, int pid, int offset) {
@@ -587,8 +587,10 @@ static void PCPProcessList_updateMemoryInfo(ProcessList* super) {
    pmAtomValue value;
    if (Metric_values(PCP_MEM_TOTAL, &value, 1, PM_TYPE_U64) != NULL)
       super->totalMem = value.ull;
-   if (Metric_values(PCP_MEM_FREE, &value, 1, PM_TYPE_U64) != NULL)
+   if (Metric_values(116, &value, 1, PM_TYPE_U64) != NULL) {
       freeMem = value.ull;
+      fprintf(stderr, "mem.free: %llu\n", freeMem);
+   }
    if (Metric_values(PCP_MEM_BUFFERS, &value, 1, PM_TYPE_U64) != NULL)
       super->buffersMem = value.ull;
    if (Metric_values(PCP_MEM_SRECLAIM, &value, 1, PM_TYPE_U64) != NULL)
@@ -751,8 +753,10 @@ static inline void PCPProcessList_scanZfsArcstats(PCPProcessList* this) {
    pmAtomValue value;
 
    memset(&this->zfs, 0, sizeof(ZfsArcStats));
-   if (Metric_values(PCP_ZFS_ARC_ANON_SIZE, &value, 1, PM_TYPE_U64))
+   if (Metric_values(118, &value, 1, PM_TYPE_U64)) {
       this->zfs.anon = value.ull / ONE_K;
+      fprintf(stderr, "zfs.anon: %llu\n", this->zfs.anon);
+   }
    if (Metric_values(PCP_ZFS_ARC_C_MAX, &value, 1, PM_TYPE_U64))
       this->zfs.max = value.ull / ONE_K;
    if (Metric_values(PCP_ZFS_ARC_BONUS_SIZE, &value, 1, PM_TYPE_U64))

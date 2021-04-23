@@ -1,6 +1,6 @@
 [ZFS]
 active = true
 name = zfsmeter
-metric = zfs.arc.size
+metric = zfs.arc.anon_size
 color = BASIC_COLOR
 uiName = ZFSMeter

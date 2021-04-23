@@ -1,6 +1,6 @@
 [ZFS]
 active = true
 name = freemem
-metric = mem.freemem
+metric = mem.util.free
 color = BASIC_COLOR
 uiName = Freemem

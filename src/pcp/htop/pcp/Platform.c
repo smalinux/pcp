@@ -406,8 +406,113 @@ static int Platform_addMetric(Metric id, const char *name) {
 /* global state from the environment and command line arguments */
 pmOptions opts;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+char** mymetrics;
+static int totalmetrics = 0; // FIXME get this value from parser
+
+
+
+int parser()
+{
+
+      fprintf(stderr, "hi \n" );
+   DIR *dir = opendir("/home/smalinux/pcp-master/src/pcp/htop/plugins");
+   FILE *input;
+   struct dirent *dirent;
+
+   if (dir == NULL)  // opendir returns NULL if couldn't open directory
+   {
+      fprintf(stderr, "Could not open current directory" );
+   }
+
+   if(NULL == (dir = opendir("plugins/"))) {
+      fprintf(stderr, "Error : Failed %s\n", strerror(errno));
+   }
+
+   char buffer[1024];
+
+   while ((dirent = readdir(dir)) != NULL) {
+      /* On linux/Unix we don't want current and parent directories
+      * On windows machine too, thanks Greg Hewgill
+      */
+     if (!strcmp (dirent->d_name, "."))
+         continue;
+     if (!strcmp (dirent->d_name, ".."))
+         continue;
+
+      char statePath[256];
+      xSnprintf(statePath, sizeof(statePath), "plugins/%s", dirent->d_name);
+      fprintf(stderr, "statePath: %s\n", statePath);
+      input = fopen(statePath, "r");
+      if (input == NULL) {
+         fprintf(stderr, "%s\n", dirent->d_name);
+         fprintf(stderr, "Err: failed to *open file:  %s\n", strerror(errno));
+
+         return 1;
+      }
+
+      fprintf(stderr, "====== %s\n", dirent->d_name);
+
+      while (fgets(buffer, sizeof(buffer), input)) {
+         char Metric[100];
+         mymetrics = realloc(mymetrics, 5*sizeof(char *)); // FIXME there are an API gives you num of lines?!
+         mymetrics[totalmetrics] = (char *)malloc(100);
+
+         if(1 != sscanf(buffer,"metric = %100s", Metric))
+            continue;
+
+         mymetrics[totalmetrics] = xStrdup(Metric);
+         fprintf(stderr, "Metric = %s\n", Metric);
+         fprintf(stderr, "mymetrics = %s\n", mymetrics[totalmetrics]);
+         totalmetrics++;
+      }
+      fclose(input);
+   }
+   return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 void Platform_init(void) {
    const char* source;
+
+
+
+   // 1- parser
+   // 2- build my list of merics
+   parser();
+   mymetrics[totalmetrics] = NULL;
+
+   for (int i = 0; i < totalmetrics; i++) {
+      fprintf(stderr, "%d - %s\n", i, mymetrics[i]);
+   }
+
+   fprintf(stderr, "totalmetrics: %d\n", totalmetrics);
+
+
    if (opts.context == PM_CONTEXT_ARCHIVE) {
       source = opts.archives[0];
    } else if (opts.context == PM_CONTEXT_HOST) {
@@ -437,15 +542,15 @@ void Platform_init(void) {
 
    pcp = xCalloc(1, sizeof(Platform));
    pcp->context = sts;
-   pcp->fetch = xCalloc(PCP_METRIC_COUNT, sizeof(pmID));
-   pcp->pmids = xCalloc(PCP_METRIC_COUNT, sizeof(pmID));
-   pcp->names = xCalloc(PCP_METRIC_COUNT, sizeof(char*));
-   pcp->descs = xCalloc(PCP_METRIC_COUNT, sizeof(pmDesc));
+   pcp->fetch = xCalloc(PCP_METRIC_COUNT + totalmetrics, sizeof(pmID)); // SMA
+   pcp->pmids = xCalloc(PCP_METRIC_COUNT + totalmetrics, sizeof(pmID)); // SMA
+   pcp->names = xCalloc(PCP_METRIC_COUNT + totalmetrics, sizeof(char*)); // SMA
+   pcp->descs = xCalloc(PCP_METRIC_COUNT + totalmetrics, sizeof(pmDesc)); // SMA
 
    /* SMA: start */
    /* compute plugin count */
-   pcp->PCPPlugin_count = PCPPlugin_computePluginCount();
-   fprintf(stderr, "num: %d\n", pcp->PCPPlugin_count);
+   // pcp->PCPPlugin_count = PCPPlugin_computePluginCount();
+   // fprintf(stderr, "num: %d\n", pcp->PCPPlugin_count);
    /* SMA: end */
 
    if (opts.context == PM_CONTEXT_ARCHIVE) {
@@ -455,6 +560,17 @@ void Platform_init(void) {
 
    for (unsigned int i = 0; i < PCP_METRIC_COUNT; i++)
       Platform_addMetric(i, Platform_metricNames[i]);
+
+
+   // SMA: START
+   static int  ss_ = 0;
+   for (unsigned int i = PCP_METRIC_COUNT; i < PCP_METRIC_COUNT+totalmetrics; i++) {
+      fprintf(stderr, "%d - %s\n", i, mymetrics[ss_]);
+      Platform_addMetric(i, mymetrics[ss_++]);
+   }
+   // SMA: END
+
+   fprintf(stderr, "pcp->total: %d\n", pcp->total); // SMA: REMOVEME
 
    sts = pmLookupName(pcp->total, pcp->names, pcp->pmids);
    if (sts < 0) {
@@ -492,6 +608,13 @@ void Platform_init(void) {
    Metric_enable(PCP_UNAME_MACHINE, true);
    Metric_enable(PCP_UNAME_DISTRO, true);
 
+   // SMA: Enable all Plugin metrics
+   static int  xx_ = 0;
+   for (unsigned int i = PCP_METRIC_COUNT; i < PCP_METRIC_COUNT+totalmetrics; i++) {
+      fprintf(stderr, "enabled %d - %s\n", i, mymetrics[xx_]);
+      Metric_enable(i, mymetrics[xx_++]);
+   }
+
    Metric_fetch(NULL);
 
    for (Metric metric = 0; metric < PCP_PROC_PID; metric++)
@@ -502,6 +625,7 @@ void Platform_init(void) {
    Metric_enable(PCP_UNAME_RELEASE, false);
    Metric_enable(PCP_UNAME_MACHINE, false);
    Metric_enable(PCP_UNAME_DISTRO, false);
+   //Metric_enable(117, false); // SMA: hold all your metrics that need to fetch once
 
    /* first sample (fetch) performed above, save constants */
    Platform_getBootTime();
@@ -702,7 +826,7 @@ void Platform_getRelease(char** string) {
 
    /* first call, extract just-sampled values */
    pmAtomValue sysname, release, machine, distro;
-   if (!Metric_values(PCP_UNAME_SYSNAME, &sysname, 1, PM_TYPE_STRING))
+   if (!Metric_values(117, &sysname, 1, PM_TYPE_STRING))
       sysname.cp = NULL;
    if (!Metric_values(PCP_UNAME_RELEASE, &release, 1, PM_TYPE_STRING))
       release.cp = NULL;
@@ -724,7 +848,7 @@ void Platform_getRelease(char** string) {
 
    if (sysname.cp) {
       strcat(pcp->release, sysname.cp);
-      strcat(pcp->release, " ");
+      strcat(pcp->release, "---- ");
    }
    if (release.cp) {
       strcat(pcp->release, release.cp);
@@ -923,8 +1047,8 @@ int PCPPlugin_computePluginCount(void) {
 
         // SMA: debug
 
-        fprintf(stderr, "%s\n", in_file->d_name);
-        count++;
+        // fprintf(stderr, "%s\n", in_file->d_name);
+        // count++;
 
         /* Open directory entry file for common operation */
         /* TODO : change permissions to meet your need! */
