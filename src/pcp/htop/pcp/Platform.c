@@ -625,7 +625,7 @@ void Platform_init(void) {
    Metric_enable(PCP_UNAME_RELEASE, false);
    Metric_enable(PCP_UNAME_MACHINE, false);
    Metric_enable(PCP_UNAME_DISTRO, false);
-   //Metric_enable(117, false); // SMA: hold all your metrics that need to fetch once
+   Metric_enable(117, false); // SMA: hold all your metrics that need to fetch once
 
    /* first sample (fetch) performed above, save constants */
    Platform_getBootTime();
