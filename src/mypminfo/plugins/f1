@@ -1,1 +1,1 @@
-metric = kernel.uname
+metric = kernel.uname.sysname

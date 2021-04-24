@@ -514,13 +514,7 @@ main(int argc, char **argv)
     }
     else { // SMA: <3
       for (a = opts.optind; a < totalmetrics; a++) { // FIXME: get num of metrics dynamically
-         printf("argv[%d] = %s\n", a, mymetrics[a]);
          sts = pmTraversePMNS(mymetrics[a], dometric);
-         // SMA: validation
-         if (sts < 0) {
-            fprintf(stderr, "Error: %s: %s\n", argv[a], pmErrStr(sts));
-            exitsts = 1;
-         }
       }
     }
 
