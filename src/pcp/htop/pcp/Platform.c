@@ -68,6 +68,9 @@ typedef struct Platform_ {
    PCPPlugin_meter* PCPPlugin_meter;
 } Platform;
 
+char** mymetrics;
+static int totalmetrics = 0; // FIXME get this value from parser
+
 Platform* pcp;
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
@@ -250,8 +253,12 @@ static const char *Platform_metricNames[] = {
 pmAtomValue* Metric_values(Metric metric, pmAtomValue *atom, int count, int type) {
 
    pmValueSet* vset = pcp->result->vset[metric];
-   if (!vset || vset->numval <= 0)
-      return NULL;
+   if (!vset || vset->numval <= 0) {
+
+      fprintf(stderr, "THIS METRIC ===> (%u) NOT EXIST!!! \n", metric);
+      //exit(1); // $ stty sane ;)
+      //return NULL;
+   }
 
    /* extract requested number of values as requested type */
    const pmDesc* desc = &pcp->descs[metric];
@@ -420,8 +427,6 @@ pmOptions opts;
 
 
 
-char** mymetrics;
-static int totalmetrics = 0; // FIXME get this value from parser
 
 
 
