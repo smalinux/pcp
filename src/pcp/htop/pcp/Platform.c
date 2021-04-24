@@ -821,13 +821,13 @@ void Platform_getRelease(char** string) {
    /* fast-path - previously-formatted string */
    if (string) {
       *string = pcp->release;
-      return;
    }
 
    /* first call, extract just-sampled values */
    pmAtomValue sysname, release, machine, distro;
    if (!Metric_values(117, &sysname, 1, PM_TYPE_STRING))
       sysname.cp = NULL;
+   fprintf(stderr, "*********************sysname: %s\n", sysname.cp);
    if (!Metric_values(PCP_UNAME_RELEASE, &release, 1, PM_TYPE_STRING))
       release.cp = NULL;
    if (!Metric_values(PCP_UNAME_MACHINE, &machine, 1, PM_TYPE_STRING))
