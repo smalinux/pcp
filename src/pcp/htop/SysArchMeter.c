@@ -17,6 +17,7 @@ static const int SysArchMeter_attributes[] = {HOSTNAME};
 static void SysArchMeter_updateValues(Meter* this) {
    static char* string;
 
+   if (string == NULL)
       Platform_getRelease(&string);
 
    String_safeStrncpy(this->txtBuffer, string, sizeof(this->txtBuffer));
