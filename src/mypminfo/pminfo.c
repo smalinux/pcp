@@ -75,7 +75,6 @@ static int	p_series;	/* Print metrics series identifiers */
 static int	p_oneline;	/* fetch oneline text? */
 static int	p_help;		/* fetch help text? */
 static int	p_value;	/* pmFetch and print value(s)? */
-static int	p_force;	/* pmFetch and print value(s)? for non-enumerable indoms */
 
 static int	need_context;	/* set if need a pmapi context */
 static int	need_pmid;	/* set if need to lookup names */
@@ -191,47 +190,11 @@ report(void)
 
 
 	if (p_value || verify) {
-      printf("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
+      printf("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT, p_value: %d, verify: %d\n", p_value, verify);
 	    vsp = result->vset[i];
-	    if (p_force) {
-		if (result->vset[i]->numval == PM_ERR_PROFILE) {
-		    /* indom is non-enumerable; try harder */
-		    if ((all_count = pmGetInDom(desc.indom, &all_inst, &all_names)) > 0) {
-			pmDelProfile(desc.indom, 0, NULL);
-			pmAddProfile(desc.indom, all_count, all_inst);
-			if (xresult != NULL) {
-			    pmFreeResult(xresult);
-			    xresult = NULL;
-			}
-			if (opts.context == PM_CONTEXT_ARCHIVE) {
-			    if ((sts = pmSetMode(PM_MODE_FORW, &opts.origin, 0)) < 0) {
-				fprintf(stderr, "%s: pmSetMode failed: %s\n", pmGetProgname(), pmErrStr(sts));
-				exit(1);
-			    }
-			}
-			if ((sts = pmFetch(1, &pmidlist[i], &xresult)) < 0) {
-			    printf("%s: pmFetch: %s\n", namelist[i], pmErrStr(sts));
-			    continue;
-			}
-			vsp = xresult->vset[0];
-			/* leave the profile in the default state */
-			free(all_inst);
-			free(all_names);
-			pmDelProfile(desc.indom, 0, NULL);
-			pmAddProfile(desc.indom, 0, NULL);
-		    }
-		    else if (all_count == 0) {
-			printf("%s: pmGetIndom: No instances?\n", namelist[i]);
-			continue;
-		    }
-		    else {
-			printf("%s: pmGetIndom: %s\n", namelist[i], pmErrStr(all_count));
-			continue;
-		    }
-		}
-	    }
 	}
 
+   // SMA: START: useless
 	if (verify) {
 	    if (desc.type == PM_TYPE_NOSUPPORT)
 		printf("%s: Not Supported\n", namelist[i]);
@@ -241,6 +204,7 @@ report(void)
 		printf("%s: No value(s) available\n", namelist[i]);
 	    continue;
 	}
+   // SMA: END: useless
 
 	/* not verify mode - detailed reporting */
 	printf("%s:> ", namelist[i]);
