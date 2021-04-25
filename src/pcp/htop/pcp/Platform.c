@@ -223,6 +223,16 @@ static const char *Platform_metricNames[] = {
    [PCP_METRIC_COUNT] = NULL
 };
 
+// Give me the index of your metric, I will print its value to stderr
+void mydump(Metric metric) {
+   pmValueSet* vset = pcp->result->vset[metric];
+   const pmDesc* desc = &pcp->descs[metric];
+   fprintf(stderr, "From mydump =========================================\n");
+	pmPrintValue(stderr, vset->valfmt, desc->type, &vset->vlist[0], 1);
+   fprintf(stderr, "\n");
+   fprintf(stderr, "\n");
+}
+
 pmAtomValue* Metric_values(Metric metric, pmAtomValue *atom, int count, int type) {
 
    pmValueSet* vset = pcp->result->vset[metric];
@@ -247,6 +257,9 @@ pmAtomValue* Metric_values(Metric metric, pmAtomValue *atom, int count, int type
          memset(&atom[i], 0, sizeof(pmAtomValue));
       }
    }
+	//pmPrintValue(stderr, pcp->result->vset[118]->valfmt, pcp->descs[117].type, &pcp->result->vset[118]->vlist[0], 1);
+	//pmPrintValue(stderr, vset->valfmt, desc->type, &vset->vlist[0], 1);
+   //fprintf(stderr, "\n");
    return atom;
 }
 
@@ -468,12 +481,6 @@ int parser()
 
 
 
-
-
-
-
-
-
 void Platform_init(void) {
    const char* source;
 
@@ -603,13 +610,27 @@ void Platform_init(void) {
    Metric_enable(PCP_UNAME_RELEASE, false);
    Metric_enable(PCP_UNAME_MACHINE, false);
    Metric_enable(PCP_UNAME_DISTRO, false);
-   //Metric_enable(117, false); // SMA: hold all your metrics that need to fetch once
+
+   //
+   // SMA:
+   //    HERE
+   //    you will handle all merics that need to be fetched
+   //    just once via -: loop
+   // for():
+   //    Metric_enable(117, false); // SMA: hold all your metrics that need to fetch once
+   //
 
    /* first sample (fetch) performed above, save constants */
    Platform_getBootTime();
    Platform_getRelease(0);
    Platform_getMaxCPU();
    Platform_getMaxPid();
+   /*
+
+   if(pcp->result[117].vset[0]->valfmt)
+      fprintf(stderr, "[[[[[[[[[[ Yes ]]]]]]]]]]\n");
+	pmPrintValue(stderr, pcp->result[117].vset[0]->valfmt, pcp->descs[117].type, &pcp->result[117].vset[0]->vlist[0], 1);
+   */
 }
 
 void Platform_done(void) {
@@ -806,6 +827,8 @@ void Platform_getRelease(char** string) {
    pmAtomValue sysname, release, machine, distro;
    if (!Metric_values(118, &sysname, 1, pcp->descs[118].type))
       sysname.cp = NULL;
+   mydump(118);
+
    if (!Metric_values(PCP_UNAME_RELEASE, &release, 1, PM_TYPE_STRING))
       release.cp = NULL;
    if (!Metric_values(PCP_UNAME_MACHINE, &machine, 1, PM_TYPE_STRING))
