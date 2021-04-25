@@ -21,6 +21,7 @@
 #include "libpcp.h"
 #include "sha1.h"
 
+static int counterTrivial = 0;
 static void myeventdump(pmValueSet *, int, int);
 static int  myoverrides(int, pmOptions *);
 
@@ -101,7 +102,6 @@ mydump(pmDesc *dp, pmValueSet *vsp, char *indent)
     // SMA: START: useless
     if (indent != NULL)
 	printf("%s", indent);
-    // SMA: END: useless
     if (vsp->numval == 0) {
 	printf("No value(s) available!\n");
 	return;
@@ -110,11 +110,12 @@ mydump(pmDesc *dp, pmValueSet *vsp, char *indent)
 	printf("Error: %s\n", pmErrStr(vsp->numval));
 	return;
     }
+    // SMA: END: useless
 
 
-	pmValue	*vp = &vsp->vlist[j];
+	//pmValue	*vp = &vsp->vlist[j];
 
-	pmPrintValue(stdout, vsp->valfmt, dp->type, vp, 1);
+	pmPrintValue(stdout, vsp->valfmt, dp->type, &vsp->vlist[0], 1);
 
 }
 
@@ -127,9 +128,6 @@ report(void)
     pmResult	*result = NULL;
     pmResult	*xresult = NULL;
     pmValueSet	*vsp = NULL;
-    int		all_count;
-    int		*all_inst;
-    char	**all_names;
 
     // SMA: START: useless
     if (batchidx == 0)
@@ -194,7 +192,7 @@ report(void)
 	    vsp = result->vset[i];
 	}
 
-   // SMA: START: useless
+   // SMA: START: useless ,,,, verify == zero
 	if (verify) {
 	    if (desc.type == PM_TYPE_NOSUPPORT)
 		printf("%s: Not Supported\n", namelist[i]);
@@ -207,10 +205,12 @@ report(void)
    // SMA: END: useless
 
 	/* not verify mode - detailed reporting */
+   printf("counterTrivial: %d\n", counterTrivial++);
 	printf("%s:> ", namelist[i]);
 	if (p_value)
 	    mydump(&desc, vsp, NULL);
     }
+
 
     if (result != NULL) {
 	pmFreeResult(result);
@@ -223,6 +223,10 @@ report(void)
 
 
 	putchar('\n'); // SMA: end of line before exit the program.
+
+
+    for(int i = 0; i < batchidx; i++)
+       printf("namelist[%d] = %s\n", i, namelist[i]);
 
 done:
     for (i = 0; i < batchidx; i++)
@@ -238,6 +242,7 @@ dometric(const char *name)
 	return;
     }
 
+    printf("** metric %s\n", name);
     namelist[batchidx]= strdup(name);
     //printf("%s\n", name);
     if (namelist[batchidx] == NULL) {
@@ -483,6 +488,7 @@ main(int argc, char **argv)
     }
 
    report();
+
 
    exit(exitsts);
 }
