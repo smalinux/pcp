@@ -46,33 +46,6 @@ in the source distribution for its full text.
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "Plugins.h"
 
-typedef struct PCPPlugin_meter_ {
-
-} PCPPlugin_meter;
-
-typedef struct Platform_ {
-   int context;			/* PMAPI(3) context identifier */
-   unsigned int total;		/* total number of all metrics */
-   const char** names;		/* name array indexed by Metric */
-   pmID* pmids;			/* all known metric identifiers */
-   pmID* fetch;			/* enabled identifiers for sampling */
-   pmDesc* descs;		/* metric desc array indexed by Metric */
-   pmResult* result;		/* sample values result indexed by Metric */
-   struct timeval offset;	/* time offset used in archive mode only */
-
-   long long btime;		/* boottime in seconds since the epoch */
-   char* release;		/* uname and distro from this context */
-   int pidmax;			/* maximum platform process identifier */
-   int ncpu;			/* maximum processor count configured */
-   int PCPPlugin_count;
-   PCPPlugin_meter* PCPPlugin_meter;
-} Platform;
-
-char** mymetrics;
-static int totalmetrics = 0; // FIXME get this value from parser
-
-Platform* pcp;
-
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
 int Platform_numberOfFields = LAST_PROCESSFIELD;
@@ -831,7 +804,7 @@ void Platform_getRelease(char** string) {
 
    /* first call, extract just-sampled values */
    pmAtomValue sysname, release, machine, distro;
-   if (!Metric_values(117, &sysname, 1, PM_TYPE_STRING))
+   if (!Metric_values(118, &sysname, 1, pcp->descs[118].type))
       sysname.cp = NULL;
    if (!Metric_values(PCP_UNAME_RELEASE, &release, 1, PM_TYPE_STRING))
       release.cp = NULL;

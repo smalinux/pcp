@@ -234,6 +234,34 @@ typedef enum Metric_ {
    PCP_METRIC_COUNT		/* total metric count */
 } Metric;
 
+typedef struct PCPPlugin_meter_ {
+
+} PCPPlugin_meter;
+
+
+typedef struct Platform_ {
+   int context;			/* PMAPI(3) context identifier */
+   unsigned int total;		/* total number of all metrics */
+   const char** names;		/* name array indexed by Metric */
+   pmID* pmids;			/* all known metric identifiers */
+   pmID* fetch;			/* enabled identifiers for sampling */
+   pmDesc* descs;		/* metric desc array indexed by Metric */
+   pmResult* result;		/* sample values result indexed by Metric */
+   struct timeval offset;	/* time offset used in archive mode only */
+
+   long long btime;		/* boottime in seconds since the epoch */
+   char* release;		/* uname and distro from this context */
+   int pidmax;			/* maximum platform process identifier */
+   int ncpu;			/* maximum processor count configured */
+   int PCPPlugin_count;
+   PCPPlugin_meter* PCPPlugin_meter;
+} Platform;
+
+char** mymetrics;
+static int totalmetrics = 0; // FIXME get this value from parser
+
+Platform* pcp;
+
 void Metric_enable(Metric metric, bool enable);
 
 bool Metric_enabled(Metric metric);

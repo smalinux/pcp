@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "config.h" // IWYU pragma: keep
 
 #include "PCPProcessList.h"
+#include "Platform.h"
 
 #include <math.h>
 
@@ -753,7 +754,7 @@ static inline void PCPProcessList_scanZfsArcstats(PCPProcessList* this) {
    pmAtomValue value;
 
    memset(&this->zfs, 0, sizeof(ZfsArcStats));
-   if (Metric_values(118, &value, 1, PM_TYPE_U64)) {
+   if (Metric_values(117, &value, 1, pcp->descs[117].type)) {
       this->zfs.anon = value.ull / ONE_K;
       fprintf(stderr, "zfs.anon: %llu\n", this->zfs.anon);
    }
