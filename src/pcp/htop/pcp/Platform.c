@@ -223,12 +223,181 @@ static const char *Platform_metricNames[] = {
    [PCP_METRIC_COUNT] = NULL
 };
 
+/* Print single pmValue. */
+void
+mypmPrintValue(FILE *f,			/* output stream */
+             int valfmt,		/* from pmValueSet */
+             int type,			/* from pmDesc */
+             const pmValue *val,	/* value to print */
+	     int minwidth)		/* output is at least this wide */
+{
+    pmAtomValue a;
+    int         i;
+    int         n;
+    char        *p;
+    int		sts;
+
+    if (type != PM_TYPE_UNKNOWN &&
+	type != PM_TYPE_EVENT &&
+	type != PM_TYPE_HIGHRES_EVENT) {
+	sts = pmExtractValue(valfmt, val, type, &a, type);
+	if (sts < 0)
+	    type = PM_TYPE_UNKNOWN;
+    }
+
+    switch (type) {
+    case PM_TYPE_32:
+        fprintf(f, "%*i", minwidth, a.l);
+        break;
+
+    case PM_TYPE_U32:
+        fprintf(f, "%*u", minwidth, a.ul);
+        break;
+
+    case PM_TYPE_64:
+        fprintf(f, "%*"PRIi64, minwidth, a.ll);
+        break;
+
+    case PM_TYPE_U64:
+        fprintf(f, "%*"PRIu64, minwidth, a.ull);
+        break;
+
+    case PM_TYPE_FLOAT:
+        fprintf(f, "%*.8g", minwidth, (double)a.f);
+        break;
+
+    case PM_TYPE_DOUBLE:
+        fprintf(f, "%*.16g", minwidth, a.d);
+        break;
+
+    case PM_TYPE_STRING:
+	n = (int)strlen(a.cp) + 2;
+	while (n < minwidth) {
+	    fputc(' ', f);
+	    n++;
+	}
+        fprintf(f, "\"%s\"", a.cp);
+	free(a.cp);
+        break;
+
+    case PM_TYPE_AGGREGATE:
+    case PM_TYPE_UNKNOWN:
+	if (valfmt == PM_VAL_INSITU) {
+	    float	*fp = (float *)&val->value.lval;
+	    __uint32_t	*ip = (__uint32_t *)&val->value.lval;
+	    int		fp_bad = 0;
+	    fprintf(f, "%*u", minwidth, *ip);
+#ifdef HAVE_FPCLASSIFY
+	    fp_bad = fpclassify(*fp) == FP_NAN;
+#else
+#ifdef HAVE_ISNANF
+	    fp_bad = isnanf(*fp);
+#endif
+#endif
+	    if (!fp_bad)
+		fprintf(f, " %*.8g", minwidth, (double)*fp);
+	    if (minwidth > 2)
+		minwidth -= 2;
+	    fprintf(f, " 0x%*x", minwidth, val->value.lval);
+	}
+	else if (valfmt == PM_VAL_DPTR || valfmt == PM_VAL_SPTR) {
+	    int		string;
+	    int		done = 0;
+	    if (val->value.pval->vlen == PM_VAL_HDR_SIZE + sizeof(__uint64_t)) {
+		__uint64_t	tmp;
+		memcpy((void *)&tmp, (void *)val->value.pval->vbuf, sizeof(tmp));
+		fprintf(f, "%*"PRIu64, minwidth, tmp);
+		done = 1;
+	    }
+	    if (val->value.pval->vlen == PM_VAL_HDR_SIZE + sizeof(double)) {
+		double		tmp;
+		int		fp_bad = 0;
+		memcpy((void *)&tmp, (void *)val->value.pval->vbuf, sizeof(tmp));
+#ifdef HAVE_FPCLASSIFY
+		fp_bad = fpclassify(tmp) == FP_NAN;
+#else
+#ifdef HAVE_ISNAN
+		fp_bad = isnan(tmp);
+#endif
+#endif
+		if (!fp_bad) {
+		    if (done) fputc(' ', f);
+		    fprintf(f, "%*.16g", minwidth, tmp);
+		    done = 1;
+		}
+	    }
+	    if (val->value.pval->vlen == PM_VAL_HDR_SIZE + sizeof(float)) {
+		float	tmp;
+		int	fp_bad = 0;
+		memcpy((void *)&tmp, (void *)val->value.pval->vbuf, sizeof(tmp));
+#ifdef HAVE_FPCLASSIFY
+		fp_bad = fpclassify(tmp) == FP_NAN;
+#else
+#ifdef HAVE_ISNANF
+		fp_bad = isnanf(tmp);
+#endif
+#endif
+		if (!fp_bad) {
+		    if (done) fputc(' ', f);
+		    fprintf(f, "%*.8g", minwidth, (double)tmp);
+		    done = 1;
+		}
+	    }
+	    if (val->value.pval->vlen < PM_VAL_HDR_SIZE)
+		fprintf(f, "pmPrintValue: negative length (%d) for aggregate value?\n",
+		    (int)val->value.pval->vlen - PM_VAL_HDR_SIZE);
+	    else {
+		string = 1;
+		for (n = 0; n < val->value.pval->vlen - PM_VAL_HDR_SIZE; n++) {
+		    if (!isprint((int)val->value.pval->vbuf[n])) {
+			string = 0;
+			break;
+		    }
+		}
+		if (string) {
+		    if (done) fputc(' ', f);
+		    n = (int)val->value.pval->vlen - PM_VAL_HDR_SIZE + 2;
+		    while (n < minwidth) {
+			fputc(' ', f);
+			n++;
+		    }
+		    n = (int)val->value.pval->vlen - PM_VAL_HDR_SIZE;
+		    fprintf(f, "\"%*.*s\"", n, n, val->value.pval->vbuf);
+		    done = 1;
+		}
+		n = 2 * (val->value.pval->vlen - PM_VAL_HDR_SIZE) + 2;
+		while (n < minwidth) {
+		    fputc(' ', f);
+		    n++;
+		}
+		if (done) fputc(' ', f);
+		fputc('[', f);
+		p = &val->value.pval->vbuf[0];
+		for (i = 0; i < val->value.pval->vlen - PM_VAL_HDR_SIZE; i++) {
+		    fprintf(f, "%02x", *p & 0xff);
+		    p++;
+		}
+		fputc(']', f);
+	    }
+	}
+	else {
+	    fprintf(f, "pmPrintValue: bad valfmt (%d)?\n", valfmt);
+	}
+	if (type != PM_TYPE_UNKNOWN)
+	    free(a.vbp);
+	break;
+
+    default:
+        fprintf(f, "pmPrintValue: unknown value type=%d\n", type);
+    }
+}
+
 // Give me the index of your metric, I will print its value to stderr
 void mydump(Metric metric) {
    pmValueSet* vset = pcp->result->vset[metric];
    const pmDesc* desc = &pcp->descs[metric];
-   fprintf(stderr, "From mydump =========================================\n");
-	pmPrintValue(stderr, vset->valfmt, desc->type, &vset->vlist[0], 1);
+   fprintf(stderr, "From mydump() ===============>> %d - %s\n", metric, Platform_metricNames[metric]);
+	mypmPrintValue(stderr, vset->valfmt, desc->type, &vset->vlist[0], 1);
    fprintf(stderr, "\n");
    fprintf(stderr, "\n");
 }
@@ -249,6 +418,7 @@ pmAtomValue* Metric_values(Metric metric, pmAtomValue *atom, int count, int type
       if (i == count)
          break;
       const pmValue *value = &vset->vlist[i];
+      //fprintf(stderr, "THIS METRIC ===> >>>>>>>>>>>>>>>>> %u \n", metric); // SMA: REMOVEME
       int sts = pmExtractValue(vset->valfmt, value, desc->type, &atom[i], type);
       if (sts < 0) {
          if (pmDebugOptions.appl0)
@@ -604,6 +774,10 @@ void Platform_init(void) {
 
    for (Metric metric = 0; metric < PCP_PROC_PID; metric++)
       Metric_enable(metric, true);
+   // SMA: REMOVEME - next 2 lines, for debugging only
+   for(int i = 0; i < pcp->total; i++)
+      mydump(i);
+
    Metric_enable(PCP_PID_MAX, false);	/* needed one time only */
    Metric_enable(PCP_BOOTTIME, false);
    Metric_enable(PCP_UNAME_SYSNAME, false);
@@ -631,6 +805,7 @@ void Platform_init(void) {
       fprintf(stderr, "[[[[[[[[[[ Yes ]]]]]]]]]]\n");
 	pmPrintValue(stderr, pcp->result[117].vset[0]->valfmt, pcp->descs[117].type, &pcp->result[117].vset[0]->vlist[0], 1);
    */
+
 }
 
 void Platform_done(void) {
