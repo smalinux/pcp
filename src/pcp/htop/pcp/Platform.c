@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "Compat.h"
 #include "CPUMeter.h"
+#include "PluginMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
@@ -44,7 +45,6 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
-#include "Plugins.h"
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
@@ -58,7 +58,7 @@ const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
-   //&PCPPluginsMeter_class,
+   &PluginMeter_class,
    &ClockMeter_class,
    &DateMeter_class,
    &DateTimeMeter_class,
@@ -775,8 +775,8 @@ void Platform_init(void) {
    for (Metric metric = 0; metric < PCP_PROC_PID; metric++)
       Metric_enable(metric, true);
    // SMA: REMOVEME - next 2 lines, for debugging only
-   for(int i = 0; i < pcp->total; i++)
-      mydump(i);
+   // for(int i = 0; i < pcp->total; i++)
+      // mydump(i);
 
    Metric_enable(PCP_PID_MAX, false);	/* needed one time only */
    Metric_enable(PCP_BOOTTIME, false);

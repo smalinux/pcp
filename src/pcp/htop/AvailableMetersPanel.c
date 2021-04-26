@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 
 #include "CPUMeter.h"
+#include "PluginMeter.h"
 #include "FunctionBar.h"
 #include "Header.h"
 #include "ListItem.h"
@@ -107,11 +108,13 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    // Platform_meterTypes[0] should be always (&CPUMeter_class), which we will
    // handle separately in the code below.
    // and Platform_meterTypes[1] should be always (&PCPPluginsMeter_class)
-   for (int i = 1; Platform_meterTypes[i]; i++) {
+   for (int i = 2; Platform_meterTypes[i]; i++) {
       const MeterClass* type = Platform_meterTypes[i];
       assert(type != &CPUMeter_class);
+      assert(type != &PluginMeter_class);
       const char* label = type->description ? type->description : type->uiName;
       Panel_add(super, (Object*) ListItem_new(label, i << 16));
+      //fprintf(stderr, "^^^^^^^ %d\n", (i << 16));
    }
    // Handle (&CPUMeter_class)
    const MeterClass* type = &CPUMeter_class;
@@ -127,14 +130,15 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
       Panel_add(super, (Object*) ListItem_new("CPU", 1));
    }
 
-   // Handle (&PCPPluginsMeter_class)
-   //const MeterClass* type = &CPUMeter_class;
+   // Handle (&PluginsMeter_class)
+   const MeterClass* plg = &PluginMeter_class;
    unsigned int plugins = pl->pluginCount;
    if (plugins > 1) {
-      for (unsigned int i = 1; i <= plugins; i++) {
+      for (unsigned int i = 1; i < plugins; i++) {
          char buffer[50];
-         xSnprintf(buffer, sizeof(buffer), "%s %d", "PlgPlace", i);
-         Panel_add(super, (Object*) ListItem_new(buffer, i));
+         xSnprintf(buffer, sizeof(buffer), "%s %d", plg->uiName, i);
+         Panel_add(super, (Object*) ListItem_new(buffer, i << 16));
+         fprintf(stderr, "^^^^^^^ %d\n", (i << 16));
       }
    }
    return this;

@@ -68,7 +68,7 @@ static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount)
 
    if (initialCpuCount > 128) {
       // Just show the average, ricers need to config for impressive screenshots
-      this->columns[0].names[0] = xStrdup("CPU");
+      this->columns[0].names[0] = xStrdup("PPU");
       this->columns[0].modes[0] = BAR_METERMODE;
    } else if (initialCpuCount > 32) {
       this->columns[0].names[0] = xStrdup("LeftCPUs8");

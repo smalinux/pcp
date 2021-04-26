@@ -50,7 +50,8 @@ static void PCPProcessList_updatePlugincount(PCPProcessList* this) {
    ProcessList* pl = &(this->super);
    int pc;
    // SMA: missing validation
-   pc = PCPPlugin_computePluginCount();
+   //pc = PCPPlugin_computePluginCount();
+   pc = 3;
    pl->pluginCount = pc;
    //fprintf(stderr, "pl->pluginCount: %d\n", pl->pluginCount);
 }
@@ -590,7 +591,7 @@ static void PCPProcessList_updateMemoryInfo(ProcessList* super) {
       super->totalMem = value.ull;
    if (Metric_values(116, &value, 1, PM_TYPE_U64) != NULL) {
       freeMem = value.ull;
-      fprintf(stderr, "mem.free: %llu\n", freeMem);
+      //fprintf(stderr, "mem.free: %llu\n", freeMem); // SMA: REMOVEME
    }
    if (Metric_values(PCP_MEM_BUFFERS, &value, 1, PM_TYPE_U64) != NULL)
       super->buffersMem = value.ull;
@@ -756,7 +757,7 @@ static inline void PCPProcessList_scanZfsArcstats(PCPProcessList* this) {
    memset(&this->zfs, 0, sizeof(ZfsArcStats));
    if (Metric_values(117, &value, 1, pcp->descs[117].type)) {
       this->zfs.anon = value.ull / ONE_K;
-      fprintf(stderr, "zfs.anon: %llu\n", this->zfs.anon);
+      // fprintf(stderr, "zfs.anon: %llu\n", this->zfs.anon); // SMA: REMOVEME
    }
    if (Metric_values(PCP_ZFS_ARC_C_MAX, &value, 1, PM_TYPE_U64))
       this->zfs.max = value.ull / ONE_K;

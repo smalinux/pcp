@@ -39,6 +39,7 @@ CFILES = \
 	CommandScreen.c \
 	Compat.c \
 	CPUMeter.c \
+	PluginMeter.c \
 	CRT.c \
 	DateMeter.c \
 	DateTimeMeter.c \
@@ -84,7 +85,6 @@ CFILES = \
 	pcp/PCPProcess.c \
 	pcp/PCPProcessList.c \
 	pcp/Platform.c \
-	pcp/Plugins.c \
 	pcp-htop.c \
 
 HFILES = \
@@ -100,6 +100,7 @@ HFILES = \
 	CommandScreen.h \
 	Compat.h \
 	CPUMeter.h \
+	PluginMeter.h \
 	CRT.h \
 	DateMeter.h \
 	DateTimeMeter.h \
@@ -149,7 +150,6 @@ HFILES = \
 	pcp/PCPProcess.h \
 	pcp/PCPProcessList.h \
 	pcp/Platform.h \
-	pcp/Plugins.h \
 	pcp/ProcessField.h \
 
 MAN_PAGES = $(CMDTARGET).1
