@@ -57,8 +57,8 @@ const SignalItem Platform_signals[] = {
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 const MeterClass* const Platform_meterTypes[] = {
-   &CPUMeter_class,
    &PluginMeter_class,
+   &CPUMeter_class,
    &ClockMeter_class,
    &DateMeter_class,
    &DateTimeMeter_class,

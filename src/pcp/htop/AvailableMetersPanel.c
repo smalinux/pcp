@@ -116,6 +116,7 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
       Panel_add(super, (Object*) ListItem_new(label, i << 16));
       //fprintf(stderr, "^^^^^^^ %d\n", (i << 16));
    }
+
    // Handle (&CPUMeter_class)
    const MeterClass* type = &CPUMeter_class;
    unsigned int cpus = pl->cpuCount;
@@ -134,11 +135,11 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    const MeterClass* plg = &PluginMeter_class;
    unsigned int plugins = pl->pluginCount;
    if (plugins > 1) {
-      for (unsigned int i = 1; i < plugins; i++) {
+      for (unsigned int i = 11; i < 20; i++) {
          char buffer[50];
          xSnprintf(buffer, sizeof(buffer), "%s %d", plg->uiName, i);
-         Panel_add(super, (Object*) ListItem_new(buffer, i << 16));
-         fprintf(stderr, "^^^^^^^ %d\n", (i << 16));
+         Panel_add(super, (Object*) ListItem_new(buffer, i));
+         //fprintf(stderr, "^^^^^^^ %d\n", (i << 16));
       }
    }
    return this;
