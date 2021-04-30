@@ -22,8 +22,30 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "XUtils.h"
 
+static void PluginMeter_init(Meter* this) {
+   for(int i = 0; i < 1; i++) {
+      char caption[100];
+      xSnprintf(caption, sizeof(caption), "%s: ", mymetrics[i]);
+      //fprintf(stderr, "From PluginMeter_updateValues ********************************\n");
+      Meter_setCaption(this, caption);
+   }
+   fprintf(stderr, "From PluginMeter_updateValues qqqqqqqqqqqqqqqqqqqqqqqq\n");
+}
+
 static void PluginMeter_updateValues(Meter* this) {
    fprintf(stderr, "From PluginMeter_updateValues ********************************\n");
+
+}
+
+static void PluginMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+   char buffer[50];
+
+   //xSnprintf(buffer, sizeof(buffer), "%s ", "Value");
+   //RichString_writeAscii(out, CRT_colors[METER_VALUE_NOTICE] , buffer);
+
+   xSnprintf(buffer, sizeof(buffer), "%d ", pcp->ncpu);
+   RichString_writeAscii(out, CRT_colors[METER_VALUE_NOTICE] , buffer);
+
 }
 
 
@@ -31,16 +53,17 @@ const MeterClass PluginMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
-      //.display = PluginMeter_display
+      .display = PluginMeter_display
    },
    .updateValues = PluginMeter_updateValues,
-   .defaultMode = BAR_METERMODE,
+   .defaultMode = TEXT_METERMODE,
    //.maxItems = Plugin_METER_ITEMCOUNT,
+   //.maxItems = 0,
    //.total = 100.0,
    //.attributes = PluginMeter_attributes,
-   .name = "Plg",
-   .uiName = "Plg",
-   .caption = "Plg",
-   //.init = PluginMeter_init
+   .name = "Plgii",
+   .uiName = "Plgin",
+   .caption = "Plgkk",
+   .init = PluginMeter_init,
 };
 

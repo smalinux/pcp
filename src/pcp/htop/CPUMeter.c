@@ -324,7 +324,7 @@ const MeterClass CPUMeter_class = {
       .display = CPUMeter_display
    },
    .updateValues = CPUMeter_updateValues,
-   .defaultMode = BAR_METERMODE,
+   .defaultMode = TEXT_METERMODE,
    .maxItems = CPU_METER_ITEMCOUNT,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
