@@ -589,7 +589,7 @@ static void PCPProcessList_updateMemoryInfo(ProcessList* super) {
    pmAtomValue value;
    if (Metric_values(PCP_MEM_TOTAL, &value, 1, PM_TYPE_U64) != NULL)
       super->totalMem = value.ull;
-   if (Metric_values(116, &value, 1, PM_TYPE_U64) != NULL) {
+   if (Metric_values(117, &value, 1, PM_TYPE_U64) != NULL) {
       freeMem = value.ull;
       //fprintf(stderr, "mem.free: %llu\n", freeMem); // SMA: REMOVEME
    }
@@ -755,7 +755,7 @@ static inline void PCPProcessList_scanZfsArcstats(PCPProcessList* this) {
    pmAtomValue value;
 
    memset(&this->zfs, 0, sizeof(ZfsArcStats));
-   if (Metric_values(117, &value, 1, pcp->descs[117].type)) {
+   if (Metric_values(116, &value, 1, pcp->descs[116].type)) {
       this->zfs.anon = value.ull / ONE_K;
       // fprintf(stderr, "zfs.anon: %llu\n", this->zfs.anon); // SMA: REMOVEME
    }

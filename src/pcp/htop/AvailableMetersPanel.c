@@ -134,15 +134,13 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    */
 
    // Handle (&PluginsMeter_class)
-   const MeterClass* plg = &PluginMeter_class;
-   unsigned int plugins = pl->pluginCount;
-   if (plugins > 1) {
-      for (unsigned int i = 1; i < 20; i++) {
+   //const MeterClass* plg = &PluginMeter_class;
+   //unsigned int plugins = pl->pluginCount;
+      for (unsigned int i = 0; i < 3; i++) {
          char buffer[50];
-         xSnprintf(buffer, sizeof(buffer), "%s %d", plg->uiName, i);
+         xSnprintf(buffer, sizeof(buffer), "PCP - %s", mymetrics[i]);
          Panel_add(super, (Object*) ListItem_new(buffer, i));
          //fprintf(stderr, "^^^^^^^ %d\n", (i << 16));
       }
-   }
    return this;
 }

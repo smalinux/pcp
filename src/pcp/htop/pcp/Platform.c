@@ -1000,9 +1000,9 @@ void Platform_getRelease(char** string) {
 
    /* first call, extract just-sampled values */
    pmAtomValue sysname, release, machine, distro;
-   if (!Metric_values(118, &sysname, 1, pcp->descs[118].type))
+   if (!Metric_values(PCP_UNAME_SYSNAME, &sysname, 1, pcp->descs[PCP_UNAME_SYSNAME].type))
       sysname.cp = NULL;
-   mydump(118);
+   //mydump(118);
 
    if (!Metric_values(PCP_UNAME_RELEASE, &release, 1, PM_TYPE_STRING))
       release.cp = NULL;
