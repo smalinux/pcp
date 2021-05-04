@@ -40,14 +40,18 @@ static void PluginMeter_updateValues(Meter* this) {
 
 static void PluginMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    char buffer[50];
+   pmAtomValue value;
 
    const Meter* this = (const Meter*)cast;
    //xSnprintf(buffer, sizeof(buffer), "%s ", "Value");
    //RichString_writeAscii(out, CRT_colors[METER_VALUE_NOTICE] , buffer);
+   mydump(this->param + 115);
 
-   xSnprintf(buffer, sizeof(buffer), "%s ", mymetrics[this->param]);
+   Metric_values(117, &value, 1, pcp->descs[117].type);
+   fprintf(stderr, "pcp->descs[117].type %d\n", pcp->descs[117].type);
+   xSnprintf(buffer, sizeof(buffer), "%s ", value.cp);
    RichString_writeAscii(out, CRT_colors[METER_VALUE_NOTICE] , buffer);
-   fprintf(stderr, "this->param %d\n", this->param);
+   //fprintf(stderr, "this->param %d\n", this->param);
 
 }
 
