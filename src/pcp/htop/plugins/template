@@ -1,0 +1,12 @@
+my.summary.disk.avgsz = delta(disk.dev.total_bytes) / delta(disk.dev.total)
+meter_type = text / bar .. led
+#uiName = sysname
+caption = Disk summary
+bar_caption = ZFS # should be 3 char only.
+#name = PCP
+description = online comment or helptext
+bar_range = 0 1000
+bar_data = 666 123 42 23
+bar_color = 4 6 2 1
+bar_label = 789/1000
+led = 666 foo / 123 bar / 42 baz
