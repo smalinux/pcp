@@ -1,7 +1,18 @@
+[Disk summary] # caption
 my.summary.disk.avgsz = delta(disk.dev.total_bytes) / delta(disk.dev.total)
-meter_type = text / bar .. led
+my.summary.disk.avgsz[label] = sum
+my.summary.disk.avgsz[color] = 1
+
+my.metric.two = disk.dev.total_bytes
+my.metric.two[label] = total
+my.metric.two[color] = 2
+
+my.metric.tree = disk.dev.total_bytes
+my.metric.tree[label] = tree
+my.metric.tree[color] = 2
+
+meter_type = text # or bar .. led
 #uiName = sysname
-caption = Disk summary
 bar_caption = ZFS # should be 3 char only.
 #name = PCP
 description = online comment or helptext
