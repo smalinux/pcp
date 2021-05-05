@@ -1,0 +1,25 @@
+From faa46a756841764e715b934051df3e363efc969a Mon Sep 17 00:00:00 2001
+From: Sohaib Mohamed <sohaib.amhmd@gmail.com>
+Date: Wed, 5 May 2021 17:02:33 +0200
+Subject: [PATCH] Skip any CPUMeter when ./htop starts..
+
+---
+ Header.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Header.c b/Header.c
+index c5ad4e2..c5d2852 100644
+--- a/Header.c
++++ b/Header.c
+@@ -95,6 +95,8 @@ MeterModeId Header_addMeterByName(Header* this, const char* name, int column) {
+    MeterModeId mode = TEXT_METERMODE;
+    // FIXMESMACPU If this now exist, meter will reset...
+    for (const MeterClass* const* type = Platform_meterTypes; *type; type++) {
++      if(type == Platform_meterTypes)
++         continue;
+       if (String_eq(name, (*type)->name)) {
+          Meter* meter = Meter_new(this->pl, param, *type);
+          Vector_add(meters, meter);
+-- 
+2.25.1
+
