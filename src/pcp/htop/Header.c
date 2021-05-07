@@ -45,10 +45,14 @@ void Header_populateFromSettings(Header* this) {
       const MeterColumnSettings* colSettings = &this->settings->columns[col];
       for (int i = 0; i < colSettings->len; i++) {
          Header_addMeterByName(this, colSettings->names[i], col);
+   fprintf(stderr, "HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEder %s\n", colSettings->names[i]);
          if (colSettings->modes[i] != 0) {
             Header_setMode(this, i, colSettings->modes[i], col);
          }
       }
+   }
+   for (int i = 0; i < 3; i++) {
+      Header_addMeterByName(this, "Plgii", 0);
    }
    Header_calculateHeight(this);
 }
@@ -69,6 +73,9 @@ void Header_writeBackToSettings(const Header* this) {
 
       for (int i = 0; i < len; i++) {
          const Meter* meter = (Meter*) Vector_get(vec, i);
+         // If it's PCP meter, please DO NOT log it into htoprc
+         if(String_eq(As_Meter(meter)->name, "Plgii"))
+            continue;
          char* name;
          if (meter->param) {
             xAsprintf(&name, "%s(%u)", As_Meter(meter)->name, meter->param);
@@ -80,6 +87,8 @@ void Header_writeBackToSettings(const Header* this) {
       }
    }
 }
+
+static int ittrr = 0;
 
 MeterModeId Header_addMeterByName(Header* this, const char* name, int column) {
    Vector* meters = this->columns[column];
@@ -94,8 +103,16 @@ MeterModeId Header_addMeterByName(Header* this, const char* name, int column) {
    }
    MeterModeId mode = TEXT_METERMODE;
    for (const MeterClass* const* type = Platform_meterTypes; *type; type++) {
+      Meter* meter;
       if (String_eq(name, (*type)->name)) {
-         Meter* meter = Meter_new(this->pl, param, *type);
+         if(String_eq(name, "Plgii")) {
+            // Here:
+            // Read from Parser if 0 or 1 for left or right
+            // before reach to next line
+            meter = Meter_new(this->pl, ittrr++, *type);
+         } else {
+            meter = Meter_new(this->pl, param, *type);
+         }
          Vector_add(meters, meter);
          mode = meter->mode;
          break;
