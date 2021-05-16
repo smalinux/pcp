@@ -47,7 +47,14 @@ Meter* Meter_new(const struct ProcessList_* pl, unsigned int param, const MeterC
    if (Meter_initFn(this)) {
       Meter_init(this);
    }
-   Meter_setMode(this, type->defaultMode);
+   if(String_eq(type->name, "PCPPlugin")) {
+      if(String_eq(plugins->type[param], "text"))
+         Meter_setMode(this, 2);
+      else if(String_eq(plugins->type[param], "bar"))
+         Meter_setMode(this, 1);
+   } else {
+      Meter_setMode(this, type->defaultMode);
+   }
    return this;
 }
 

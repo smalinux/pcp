@@ -30,6 +30,38 @@ in the source distribution for its full text.
 #include "SignalsPanel.h"
 #include "SysArchMeter.h"
 
+typedef struct Plugins_ {
+   char** color;
+   char** metric;
+   char** expr;
+   char** description;
+   int* side;
+   int* onefetch;
+   char** type;
+   char** uiName;
+   char** caption;
+   uint64_t* bar_max;
+} Plugins;
+
+typedef struct Platform_ {
+   int context;			/* PMAPI(3) context identifier */
+   unsigned int total;		/* total number of all metrics */
+   const char** names;		/* name array indexed by Metric */
+   pmID* pmids;			/* all known metric identifiers */
+   pmID* fetch;			/* enabled identifiers for sampling */
+   pmDesc* descs;		/* metric desc array indexed by Metric */
+   pmResult* result;		/* sample values result indexed by Metric */
+   struct timeval offset;	/* time offset used in archive mode only */
+
+   long long btime;		/* boottime in seconds since the epoch */
+   char* release;		/* uname and distro from this context */
+   int pidmax;			/* maximum platform process identifier */
+   int ncpu;			/* maximum processor count configured */
+} Platform;
+
+Platform* pcp;
+Plugins* plugins;
+int totalplugins;
 
 extern ProcessField Platform_defaultFields[];
 
@@ -253,5 +285,7 @@ pmAtomValue *Metric_instance(Metric metric, int inst, int offset, pmAtomValue *a
 void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec);
 
 void Platform_gettime_monotonic(uint64_t* msec);
+
+int Platform_pluginParser(void);
 
 #endif

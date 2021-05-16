@@ -130,6 +130,12 @@ typedef enum ColorElements_ {
    ZFS_COMPRESSED,
    ZFS_RATIO,
    ZRAM,
+   PCP_BLUE,
+   PCP_RED,
+   PCP_GREEN,
+   PCP_YELLOW,
+   PCP_CYAN,
+   PCP_SHADOW,
    LAST_COLORELEMENT
 } ColorElements;
 

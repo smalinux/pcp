@@ -50,6 +50,13 @@ void Header_populateFromSettings(Header* this) {
          }
       }
    }
+
+   for(int i = 0; i < totalplugins; i++) {
+      // 0 == left side
+      // 1 == right side
+      Header_addMeterByName(this, "PCPPlugin", plugins->side[i]);
+   }
+
    Header_calculateHeight(this);
 }
 
@@ -70,6 +77,9 @@ void Header_writeBackToSettings(const Header* this) {
       for (int i = 0; i < len; i++) {
          const Meter* meter = (Meter*) Vector_get(vec, i);
          char* name;
+         // If it's PCPPlugin, please DO NOT write it back into htoprc
+         if(String_eq(As_Meter(meter)->name, "PCPPlugin"))
+            continue;
          if (meter->param) {
             xAsprintf(&name, "%s(%u)", As_Meter(meter)->name, meter->param);
          } else {
@@ -82,6 +92,7 @@ void Header_writeBackToSettings(const Header* this) {
 }
 
 MeterModeId Header_addMeterByName(Header* this, const char* name, int column) {
+   static int index = 0;
    Vector* meters = this->columns[column];
 
    char* paren = strchr(name, '(');
@@ -94,8 +105,13 @@ MeterModeId Header_addMeterByName(Header* this, const char* name, int column) {
    }
    MeterModeId mode = TEXT_METERMODE;
    for (const MeterClass* const* type = Platform_meterTypes; *type; type++) {
+      Meter* meter;
       if (String_eq(name, (*type)->name)) {
-         Meter* meter = Meter_new(this->pl, param, *type);
+         if (String_eq(name, "PCPPlugin")) {
+            meter = Meter_new(this->pl, index++, *type);
+         }
+         else
+            meter = Meter_new(this->pl, param, *type);
          Vector_add(meters, meter);
          mode = meter->mode;
          break;
